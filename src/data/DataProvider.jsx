@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { DataContext } from './context.js'
 
-// Misma clave y misma forma de datos que la versión anterior: si abrís la
-// app React en el mismo navegador/origen, tus datos viejos se leen igual.
-const STORAGE_KEY = 'organizador:data'
+// Cada cuenta guarda en su propia clave, así dos personas que usan el mismo
+// navegador no ven los datos de la otra.
+const LEGACY_KEY = 'organizador:data' // la clave de antes de existir el login
+const keyFor = (uid) => `organizador:data:${uid}`
 
 const EMPTY = {
   transactions: [],
@@ -13,9 +14,20 @@ const EMPTY = {
   mealNotes: '',
 }
 
-function load() {
+function load(uid) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const key = keyFor(uid)
+    let raw = localStorage.getItem(key)
+    if (!raw) {
+      // Datos cargados antes del login: los hereda la primera cuenta que entra
+      // y se MUEVEN (no se copian), para que no los herede nadie más.
+      const legacy = localStorage.getItem(LEGACY_KEY)
+      if (legacy) {
+        localStorage.setItem(key, legacy)
+        localStorage.removeItem(LEGACY_KEY)
+        raw = legacy
+      }
+    }
     if (raw) return { ...EMPTY, ...JSON.parse(raw) }
   } catch (e) {
     console.warn('No se pudieron leer los datos guardados, empiezo de cero.', e)
@@ -25,16 +37,16 @@ function load() {
 
 // ESTE es el único archivo que sabe dónde se guardan los datos.
 // En el paso 3 lo cambiamos por Firestore y el resto de la app ni se entera.
-export function DataProvider({ children }) {
-  const [data, setData] = useState(load)
+export function DataProvider({ uid, children }) {
+  const [data, setData] = useState(() => load(uid))
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+      localStorage.setItem(keyFor(uid), JSON.stringify(data))
     } catch (e) {
       console.error('Error guardando en localStorage', e)
     }
-  }, [data])
+  }, [data, uid])
 
   // update recibe una función que devuelve SOLO lo que cambia.
   const update = useCallback((fn) => {

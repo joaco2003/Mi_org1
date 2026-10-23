@@ -1,6 +1,7 @@
+import { useAuth } from '../auth/context.js'
 import { useData } from '../data/context.js'
 import { TABS } from '../lib/tabs.js'
-import { COMIDAS, DIAS, fmtMoney, getTotals, todayIndex, todayISO } from '../lib/utils.js'
+import { COMIDAS, DIAS, firstName, fmtMoney, getTotals, todayIndex, todayISO } from '../lib/utils.js'
 
 const DIRECTORIO = [
   { tab: 'calendario', title: 'Calendario', sub: 'Mes · días · eventos' },
@@ -11,6 +12,7 @@ const DIRECTORIO = [
 
 export default function Inicio({ tab, setTab }) {
   const { data } = useData()
+  const { user } = useAuth()
 
   const { balance } = getTotals(data.transactions)
   const today = todayISO()
@@ -23,7 +25,7 @@ export default function Inicio({ tab, setTab }) {
       <div className="inicio-grid">
         <div className="inicio-main">
           <div className="eyebrow">HUB · ÍNDICE</div>
-          <h1 className="hero">Bienvenida,</h1>
+          <h1 className="hero">Hola, {firstName(user)},</h1>
           <p className="hero-sub">tocá donde quieras para empezar.</p>
           <p className="sub">
             Cada tarjeta de acá es un acceso directo. Usá los botones de abajo o el directorio de la

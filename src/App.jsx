@@ -1,35 +1,28 @@
-import { useState } from 'react'
+import { AuthProvider } from './auth/AuthProvider.jsx'
+import { useAuth } from './auth/context.js'
+import Login from './components/Login.jsx'
+import Organizador from './components/Organizador.jsx'
 import { DataProvider } from './data/DataProvider.jsx'
-import Calendario from './components/Calendario.jsx'
-import Comidas from './components/Comidas.jsx'
-import DiaADia from './components/DiaADia.jsx'
-import Finanzas from './components/Finanzas.jsx'
-import Inicio from './components/Inicio.jsx'
-import Masthead from './components/Masthead.jsx'
-import Rail from './components/Rail.jsx'
+
+// El "portero": sin sesión iniciada no se ve nada de la app.
+function Gate() {
+  const { user, loading } = useAuth()
+
+  if (loading) return <div className="splash">Cargando…</div>
+  if (!user) return <Login />
+
+  // key={uid}: si cambia la cuenta, los datos de la anterior se descartan por completo.
+  return (
+    <DataProvider key={user.uid} uid={user.uid}>
+      <Organizador />
+    </DataProvider>
+  )
+}
 
 export default function App() {
-  const [tab, setTab] = useState('inicio')
-
   return (
-    <DataProvider>
-      <div className="app-shell">
-        <div className="app">
-          <Masthead tab={tab} setTab={setTab} />
-
-          {tab === 'inicio' && <Inicio tab={tab} setTab={setTab} />}
-          {tab === 'finanzas' && <Finanzas />}
-          {tab === 'dia' && <DiaADia />}
-          {tab === 'calendario' && <Calendario />}
-          {tab === 'comida' && <Comidas />}
-
-          <div className="footer-note">
-            tocá donde quieras para navegar · tus datos se guardan solos en este navegador
-          </div>
-        </div>
-
-        <Rail tab={tab} setTab={setTab} />
-      </div>
-    </DataProvider>
+    <AuthProvider>
+      <Gate />
+    </AuthProvider>
   )
 }

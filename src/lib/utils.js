@@ -42,3 +42,10 @@ export function getTotals(transactions) {
   const expenses = transactions.filter((t) => t.type === 'gasto').reduce((a, t) => a + t.amount, 0)
   return { income, expenses, balance: income - expenses }
 }
+
+// "Ana María Pérez" -> "Ana". Sin nombre cargado, usa lo anterior a la @ del email.
+export function firstName(user) {
+  if (!user) return ''
+  const name = (user.displayName || '').trim().split(/\s+/)[0]
+  return name || (user.email || '').split('@')[0]
+}
